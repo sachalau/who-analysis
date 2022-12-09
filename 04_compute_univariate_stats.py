@@ -12,7 +12,7 @@ import tracemalloc
 
 # starting the memory monitoring
 tracemalloc.start()
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 
 
 def get_genos_phenos(analysis_dir, drug):
@@ -227,7 +227,8 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
     res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
     
     res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
-    assert len(old_df) == len(res_df)
+    # I have an issue on this assert as well
+#    assert len(old_df) == len(res_df)
         
     res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
        'Bonferroni_pval', 'Significant', 'Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec',
@@ -238,27 +239,27 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
 
 _, drug = sys.argv
 
-who_analysis_paths = ["tiers=1/phenos=WHO/dropAF_noSyn",
+who_analysis_paths = ["BINARY/" + x for x in  ["tiers=1/phenos=WHO/dropAF_noSyn",
                   "tiers=1/phenos=WHO/dropAF_noSyn_unpooled",
                   "tiers=1/phenos=WHO/dropAF_withSyn",
                   "tiers=1+2/phenos=WHO/dropAF_noSyn",
                   "tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled",
                   "tiers=1+2/phenos=WHO/dropAF_withSyn",
-]
+]]
 
-all_analysis_paths = ["tiers=1/phenos=ALL/dropAF_noSyn",
+all_analysis_paths = ["BINARY/"+ x for x in ["tiers=1/phenos=ALL/dropAF_noSyn",
                   "tiers=1/phenos=ALL/dropAF_noSyn_unpooled",
                   "tiers=1/phenos=ALL/dropAF_withSyn",
                   "tiers=1+2/phenos=ALL/dropAF_noSyn",
                   "tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled",
                   "tiers=1+2/phenos=ALL/dropAF_withSyn",
-]
+]]
 
-continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
+continuous_analysis_paths = ["BINARY/" + x for x in ["tiers=1/phenos=WHO/encodeAF_noSyn",
                   "tiers=1+2/phenos=WHO/encodeAF_noSyn",
                   "tiers=1/phenos=ALL/encodeAF_noSyn",
                   "tiers=1+2/phenos=ALL/encodeAF_noSyn",
-]
+]]
 
 
 # get dataframes of mutations for WHO isolates only

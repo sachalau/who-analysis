@@ -4,7 +4,7 @@ import glob, os, yaml, sys
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
 
 
@@ -78,7 +78,7 @@ if not os.path.isdir(out_dir):
 print(f"\nSaving model results to {out_dir}")            
 
 if binary:
-    phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
+    phenos_dir = '/home/ec2-user/data/phenotypes'
     pheno_col = "phenotype"
     if atu_analysis:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
@@ -90,7 +90,7 @@ else:
     pheno_col = "mic_value"
     
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
-genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
+genos_dir = '/home/ec2-user/data/full_genotypes'
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
 

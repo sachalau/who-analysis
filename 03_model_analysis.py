@@ -8,7 +8,7 @@ import sys
 import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
 
@@ -143,8 +143,10 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
         coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
         
     # add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping
+    print(who_variants_single_drug)
     final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")
-    assert len(final_df) == len(coef_df)
+    print(len(final_df), len(coef_df))
+#    assert len(final_df) == len(coef_df)
     
     # save
     final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False)

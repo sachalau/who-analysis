@@ -12,19 +12,23 @@ warnings.filterwarnings("ignore")
 # It also generates the minor allele counts dataframe from the GRM directory. 
 # Principal components are computed from this dataframe for lineage structure correction.
 
-snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
-genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
-mic_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
+snp_dir = "/home/ec2-user/data/grm"
+genos_dir = '/home/ec2-user/data/full_genotypes'
+phenos_dir = '/home/ec2-user/data/phenotypes'
+#mic_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
 
 pheno_drugs = os.listdir(phenos_dir)
 geno_drugs = os.listdir(genos_dir)
-mic_drugs = os.listdir(mic_dir)
+#mic_drugs = os.listdir(mic_dir)
 
-drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
+print(pheno_drugs, geno_drugs)
+
+#drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
+drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)))
+
 print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
-lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
+#lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 
 print("Creating matrix of minor allele counts")
 snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
@@ -121,7 +125,7 @@ def compute_num_mutations(drug, tiers_lst):
         return np.nan, np.nan
     
 
-summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "SNP_Matrix", "MICs", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
+summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "SNP_Matrix", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
 i = 0
 
 print("Counting data for each drug")
@@ -136,12 +140,12 @@ for drug in drugs_for_analysis:
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
     
     # get all CSV files containing MICs
-    mic_files = os.listdir(os.path.join(mic_dir, drug))
-    mics = pd.concat([pd.read_csv(os.path.join(mic_dir, drug, fName), usecols=["sample_id"]) for fName in mic_files if "run" in fName], axis=0)
+#    mic_files = os.listdir(os.path.join(mic_dir, drug))
+#    mics = pd.concat([pd.read_csv(os.path.join(mic_dir, drug, fName), usecols=["sample_id"]) for fName in mic_files if "run" in fName], axis=0)
     
     # get numbers of samples represented in the GRM folder and with lineages (this will be less because not all sample_ids were matched to VCF files)
     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
-    samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
+#    samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the numbers of isolates, by tier
     num_lof_tier1, num_inframe_tier1 = compute_num_mutations(drug, ['1'])
@@ -151,8 +155,8 @@ for drug in drugs_for_analysis:
                          len(genos.sample_id.unique()), 
                          len(phenos.sample_id.unique()), 
                          len(num_with_snps),
-                         len(mics.sample_id.unique()),
-                         len(samples_with_lineages),
+#                         len(mics.sample_id.unique()),
+#                         len(samples_with_lineages),
                          num_lof_tier1,
                          num_inframe_tier1,
                          num_lof_tier2,

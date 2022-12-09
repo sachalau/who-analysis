@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
