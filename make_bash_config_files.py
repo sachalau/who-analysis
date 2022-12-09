@@ -71,3 +71,54 @@ out_dir = "/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue"
 
 for drug in drug_abbr_dict.keys():
     make_single_drug_bash_script(f"bash_scripts/run_{drug_abbr_dict[drug]}.sh", out_dir, "binary", 16, drug, drug_abbr_dict[drug])
+
+
+# make directory to store config files if it doesn't exist
+if not os.path.isdir("config_files"):
+    os.mkdir("config_files")
+
+# order of parameters to be updated: pheno_category_lst, tiers_lst, unpooled, synonymous, amb_mode
+all_combos = [[["WHO"], ["1"], False, False, "DROP"],
+              [["WHO"], ["1"], True, False, "DROP"],
+              [["WHO"], ["1"], False, True, "DROP"],
+              [["WHO"], ["1", "2"], False, False, "DROP"],
+              [["WHO"], ["1", "2"], True, False, "DROP"],
+              [["WHO"], ["1", "2"], False, True, "DROP"],
+              [["ALL"], ["1"], False, False, "DROP"],
+              [["ALL"], ["1"], True, False, "DROP"],
+              [["ALL"], ["1"], False, True, "DROP"],
+              [["ALL"], ["1", "2"], False, False, "DROP"],
+              [["ALL"], ["1", "2"], True, False, "DROP"],
+              [["ALL"], ["1", "2"], False, True, "DROP"],
+              [["WHO"], ["1"], False, False, "AF"],
+              [["WHO"], ["1", "2"], False, False, "AF"],
+              [["ALL"], ["1"], False, False, "AF"],
+              [["ALL"], ["1", "2"], False, False, "AF"]
+            ]
+
+# example set of kwargs -- KEEP UPDATED!
+kwargs = yaml.safe_load(open("config.yaml"))
+
+
+# config files run from 1 - len(all_combos)
+for i in list(range(1, len(all_combos)+1)):
+        
+    # if the number is less than 10, add a 0 in front of it to keep them in order
+    if i < 10:
+        num_str = f"0{i}"
+    else:
+        num_str = str(i)
+    
+    with open(f"config_files/binary_{num_str}.yaml", "w+") as file:
+        
+        # constant for all cases
+        kwargs["binary"] = True
+        kwargs["atu_analysis"] = False
+        
+        if "model_prefix" in kwargs.keys():
+            del kwargs["model_prefix"]
+        
+        # update param combinations and write to the file
+        param_dict = dict(zip(["pheno_category_lst", "tiers_lst", "unpooled", "synonymous", "amb_mode"], all_combos[i-1]))
+        kwargs.update(param_dict)
+        yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
