@@ -18,7 +18,7 @@ _, input_data_dir = sys.argv
 snp_dir = os.path.join(input_data_dir, "grm")
 genos_dir = os.path.join(input_data_dir, "full_genotypes")
 phenos_dir = os.path.join(input_data_dir, "phenotypes")
-mic_dir = os.path.join(input_data_dir, "mic")
+# mic_dir = os.path.join(input_data_dir, "mic")
 
 pheno_drugs = os.listdir(phenos_dir)
 geno_drugs = os.listdir(genos_dir)
