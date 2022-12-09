@@ -67,7 +67,7 @@ drug_abbr_dict = {"Delamanid": "DLM",
 
 
 # example to make all 15 bash scripts with the ATU config files
-out_dir = "/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue"
+out_dir = "/home/ec2-user/who-mutation-catalogue"
 
 for drug in drug_abbr_dict.keys():
     make_single_drug_bash_script(f"bash_scripts/run_{drug_abbr_dict[drug]}.sh", out_dir, "binary", 16, drug, drug_abbr_dict[drug])
