@@ -82,16 +82,19 @@ For every drug, run the following numbered scripts in order, with the `config.ya
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
 3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
-4. <code>04_compute_univariate_stats.py</code>: computes univariate statistics, confidence intervals, and adds some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). 
     
 Parameters in the yaml file are as follows:
     
 <ul>
+    <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes".</li>
+    <li><code>output_dir</code>: Directory where model results will be written.</li>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
+    <li><code>atu_analysis</code>: boolean for whether this is the normal binary analysis or a CC vs. CC-ATU analysis</li>
+    <li><code>atu_analysis_type</code>: string "CC" or "CC-ATU" denoting which model to run in this analysis. Only used if <code>atu_analysis = True</code></li>
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
-    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
+    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL. Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
-    <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
+    <li><code>unpooled</code>: boolean for whether or not LOF mutations and inframe mutations should be unpooled. By default, the features are pooled into an aggregate "LOF" feature and an aggregate "inframe" feature</li>
     <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
     <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
     <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
@@ -103,7 +106,7 @@ Parameters in the yaml file are as follows:
     <li><code>alpha</code>: significance level</li>
 </ul>
 
-### Order of Models:
+### Order of Binary Models:
 
 1. Tier 1, WHO, no synonymous, DROP Hets
 2. Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
@@ -121,6 +124,18 @@ Parameters in the yaml file are as follows:
 14. <b>Tier 1+2</b>, WHO, no synonymous, <b>encode AF</b>
 15. Tier 1, <b>ALL</b>, no synonymous, <b>encode AF</b>
 16. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>
+
+### Final Analysis
+
+After all 16 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). This script requires the following arguments:
+
+<ul>
+    <li><code>drug</code> (same as the previous scripts)</li>
+    <li><code>folder</code> (should be one of "BINARY", "ATU", or "MIC", depending on the analysis</li>
+    <li><code>input_dir</code> (same as the previous scripts)</li>
+</ul>
+    
+Finally, run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
  
 ### Pooling LOF Mutations
     

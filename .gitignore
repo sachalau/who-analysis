@@ -4,12 +4,13 @@ __pycache__/
 # scratch notebook
 sandbox.ipynb
 
-# extra config and bash files made during testing
-config_*.yaml
-*.sh
+# config_files -- they keep getting updated as models are run, so can cause merge conflicts
 config_files/
 
 # confidential information
 data/sample_ids_mapping.csv
 data/lineages.csv
 data/combined_lineage_sample_IDs.pkl
+
+# extra semi-duplicate files used for testing
+bash_scripts/dup*.sh

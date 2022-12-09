@@ -4,7 +4,6 @@ import glob, os, yaml, sys
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
-analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
 
 
@@ -21,6 +20,8 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
+input_data_dir = kwargs["input_dir"]
+analysis_dir = kwargs["output_dir"]
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -78,21 +79,27 @@ if not os.path.isdir(out_dir):
 print(f"\nSaving model results to {out_dir}")            
 
 if binary:
-    phenos_dir = '/home/ec2-user/data/phenotypes'
+    phenos_dir = os.path.join(input_data_dir, "phenotypes")
     pheno_col = "phenotype"
     if atu_analysis:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
     else:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 else:
-    phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
+    phenos_dir = os.path.join(input_data_dir, "mic")
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
     
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
-genos_dir = '/home/ec2-user/data/full_genotypes'
+genos_dir = os.path.join(input_data_dir, "full_genotypes")
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
+
+# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("Model matrix already exists. Proceeding with modeling")
+    exit()
+    
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
 
@@ -150,6 +157,8 @@ if not os.path.isfile(phenos_file):
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+    else:
+        df_phenos["medium"] = df_phenos["medium"].replace("Middlebrook7H10", "7H10")
 
     # Drop samples with multiple recorded phenotypes
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
@@ -222,7 +231,7 @@ def read_in_all_genos(drug):
         df = pd.read_csv(fName, low_memory=False)            
         dfs_lst.append(df)
 
-    # fail-safe if there are duplicate rows
+    # remove any duplicate rows
     return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 

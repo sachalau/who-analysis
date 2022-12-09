@@ -7,7 +7,6 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
-analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
@@ -23,6 +22,7 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
+analysis_dir = kwargs["output_dir"]
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -43,7 +43,7 @@ if binary:
     if atu_analysis:
         out_dir = os.path.join(analysis_dir, drug, "ATU", f"tiers={'+'.join(tiers_lst)}", model_prefix)
         
-        # the CC and CC-ATU models are in the same folder, but the output files (i.e. regression_coef.csv should have different suffixes to distinguish)
+        # the CC and CC-ATU models are in the same folder, but the output files (i.e. regression_coef.csv have different suffixes to distinguish)
         model_suffix = kwargs["atu_analysis_type"]
         assert model_suffix == "CC" or model_suffix == "CC-ATU"
     else:

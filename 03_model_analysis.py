@@ -8,7 +8,6 @@ import sys
 import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
-analysis_dir = '/home/ec2-user/who-mutation-catalogue'
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
 
@@ -21,12 +20,17 @@ who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 # # combine with the new names to get a dataframe with the confidence leve,s and variant mappings between 2021 and 2022
 # who_variants_combined = who_variants.merge(variant_mapping[["V1", "mutation"]], left_on="variant", right_on="V1", how="inner")
 # del who_variants_combined["variant"]
+
+# # check that they have all the same variants
 # assert len(set(who_variants_combined["V1"]).symmetric_difference(set(who_variants["variant"]))) == 0
 
-# who_variants_combined = who_variants_combined.drop_duplicates()
-# who_variants_combined = who_variants_combined.dropna(subset=["drug", "genome_index", "confidence", "gene", "V1", "mutation"])
-# who_variants_combined[["drug", "confidence", "mutation"]].to_csv("analysis/who_confidence_2021.csv", index=False)
+# del who_variants_combined["genome_index"]
+# del who_variants_combined["gene"]
+# del who_variants_combined["V1"]
 
+# # some V1 mutations were combined into a single V2 mutation, so they may have multiple confidences listed. Keep the highest confidence instance
+# who_variants_combined = who_variants_combined.dropna().sort_values("confidence", ascending=True).drop_duplicates(subset=["drug", "mutation"], keep="first")
+# who_variants_combined.to_csv("analysis/who_confidence_2021.csv", index=False)
 
 
 def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
@@ -89,6 +93,7 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     pheno_category_lst = kwargs["pheno_category_lst"]
     atu_analysis = kwargs["atu_analysis"]
     atu_analysis_type = kwargs["atu_analysis_type"]
+    analysis_dir = kwargs["output_dir"]
     
     if "ALL" in pheno_category_lst:
         phenos_name = "ALL"
