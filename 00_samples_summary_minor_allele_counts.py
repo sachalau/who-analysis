@@ -12,7 +12,6 @@ warnings.filterwarnings("ignore")
 # Principal components are computed from this dataframe for lineage structure correction.
 
 
-# default for Farhat analysis: input_data_dir = "/n/data1/hms/dbmi/farhat/ye12/who"
 _, input_data_dir = sys.argv
 
 snp_dir = os.path.join(input_data_dir, "grm")
