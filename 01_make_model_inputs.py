@@ -155,7 +155,11 @@ if not os.path.isfile(phenos_file):
             df_phenos = df_phenos.loc[df_phenos["phenotypic_category"].str.contains("CC")]
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
+        
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+        if len(df_phenos) == 0:
+            print("There are no phenotypes for this analysis. Quitting this model")
+            exit()
     else:
         df_phenos["medium"] = df_phenos["medium"].replace("Middlebrook7H10", "7H10")
 
@@ -169,7 +173,7 @@ if not os.path.isfile(phenos_file):
             df_phenos = df_phenos.query("sample_id not in @drop_samples")
     else:
         if len(drop_samples) == 0:
-            print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model!")
+            print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model")
             exit()
         else:
             print(f"    {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates have different phenotypes using different CCs")
@@ -246,18 +250,29 @@ if not os.path.isfile(genos_file):
 
     if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
         del df_model["neutral"]
+        
+#     # the p.Gly139Arg variant is listed with predicted effects of both stop_retained_variant and missense_variant. The latter is correct, so remove the former
+#     if drug == "Pyrazinamide":
+#         df_model = df_model.query("~(variant_category=='p.Gly139Arg' & predicted_effect=='stop_retained_variant')")
+    
     df_model.to_csv(genos_file, compression="gzip", index=False)
 else:
     df_model = pd.read_csv(genos_file, compression="gzip")
 
 # keep only samples that are in the phenotypes dataframe and variants in the desired tiers
 keep_genes = drug_gene_mapping.loc[(drug_gene_mapping["Drug"] == drug) & 
-                      (drug_gene_mapping["Tier"].isin(np.array(tiers_lst).astype(int)))
-                     ]["Gene"].values
+                                   (drug_gene_mapping["Tier"].isin(np.array(tiers_lst).astype(int)))
+                                  ]
+
+if len(np.unique(keep_genes["Tier"].values)) == 1 and np.unique(keep_genes["Tier"].values) == np.array([1]) and "2" in tiers_lst:
+    print("There are no tier 2 genes. Quitting this model")
+    exit()
+else:
+    keep_genes = keep_genes["Gene"].values
 
 df_model = df_model.loc[(df_model["sample_id"].isin(df_phenos["sample_id"].values)) & 
-             (df_model["resolved_symbol"].isin(keep_genes))
-            ]
+                        (df_model["resolved_symbol"].isin(keep_genes))
+                       ]
 
 if not synonymous:
     df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)
@@ -330,7 +345,7 @@ if amb_mode.upper() in ["BINARY", "DROP"]:
 # the smallest value will be 0. Check that the second smallest value is greater than 0.25 (below this, AFs are not really reliable)
 else:
     assert np.sort(np.unique(matrix.values))[1] > 0.25
-
+    
 # compare proportions of missing isolates or variants to determine which is larger and drop that first. usually, isolates have more missingness
 # maximum proportion of missing isolates per feature
 max_prop_missing_isolates_per_feature = matrix.isna().sum(axis=0).max() / matrix.shape[0]
@@ -348,7 +363,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
     num_isolates_after_isolate_thresh = filtered_matrix.shape[0]
     num_features_after_isolate_thresh = filtered_matrix.shape[1]
     
-    # drop features (columns) with missingness above the threshold (default = 1%)
+    # drop features (columns) with missingness above the threshold (default = 25%)
     filtered_matrix = filtered_matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*filtered_matrix.shape[0])
     print(f"    Dropped {num_features_after_isolate_thresh - filtered_matrix.shape[1]}/{num_features_after_isolate_thresh} variants with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
@@ -357,7 +372,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
 else:
     print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant and {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate have missing data")
     
-    # drop features (columns) with missingness above the threshold (default = 1%)
+    # drop features (columns) with missingness above the threshold (default = 25%)
     filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*matrix.shape[0])
     
     print(f"    Dropped {matrix.shape[1] - filtered_matrix.shape[1]}/{matrix.shape[1]} variants with >{int(missing_feature_thresh*100)}% missingness")
@@ -373,7 +388,7 @@ else:
 ############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #############
 
 
-# can only impute as this is written for binary phenotypes. Not going to impute anyway, so I'm not going to adapt this for MIC samples
+# can only impute as this is written for binary phenotypes
 if impute and binary:
     # use only samples that are in the filtered matrix for imputation
     df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
